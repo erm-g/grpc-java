@@ -42,6 +42,9 @@ abstract class CertProviderSslContextProvider extends DynamicSslContextProvider 
   @Nullable protected List<X509Certificate> savedCertChain;
   @Nullable protected List<X509Certificate> savedTrustedRoots;
 
+  @Nullable protected Map<String, List<X509Certificate>> savedSpiffeRoots;
+
+
   protected CertProviderSslContextProvider(
       Node node,
       @Nullable Map<String, CertificateProviderInfo> certProviders,
@@ -146,6 +149,12 @@ abstract class CertProviderSslContextProvider extends DynamicSslContextProvider 
   @Override
   public final void updateTrustedRoots(List<X509Certificate> trustedRoots) {
     savedTrustedRoots = trustedRoots;
+    updateSslContextWhenReady();
+  }
+
+  @Override
+  public final void updateSpiffeRoots(Map<String, List<X509Certificate>> spiffeRoots) {
+    savedSpiffeRoots = spiffeRoots;
     updateSslContextWhenReady();
   }
 

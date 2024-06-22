@@ -30,6 +30,10 @@ import java.nio.file.attribute.FileTime;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -47,6 +51,7 @@ final class FileWatcherCertificateProvider extends CertificateProvider implement
   private final Path certFile;
   private final Path keyFile;
   private final Path trustFile;
+  private final Path spiffeFile;
   private final long refreshIntervalInSeconds;
   @VisibleForTesting ScheduledFuture<?> scheduledFuture;
   private FileTime lastModifiedTimeCert;
@@ -71,6 +76,7 @@ final class FileWatcherCertificateProvider extends CertificateProvider implement
     this.keyFile = Paths.get(checkNotNull(keyFile, "keyFile"));
     this.trustFile = Paths.get(checkNotNull(trustFile, "trustFile"));
     this.refreshIntervalInSeconds = refreshIntervalInSeconds;
+    this.spiffeFile = Paths.get("");
   }
 
   @Override
@@ -140,6 +146,13 @@ final class FileWatcherCertificateProvider extends CertificateProvider implement
           getWatcher().updateTrustedRoots(Arrays.asList(caCerts));
         }
         lastModifiedTimeRoot = currentRootTime;
+        byte[] spiffeFileContents = Files.readAllBytes(trustFile);
+        try (ByteArrayInputStream rootStream = new ByteArrayInputStream(spiffeFileContents)) {
+          X509Certificate[] caCerts = CertificateUtils.toX509Certificates(rootStream);
+          Map<String, List<X509Certificate>> spiffeMap = new HashMap<>();
+          spiffeMap.put("workload-id", Arrays.asList(caCerts));
+          getWatcher().updateSpiffeRoots(spiffeMap);
+        }
       } catch (Throwable t) {
         getWatcher().onError(Status.fromThrowable(t));
       }
