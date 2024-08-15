@@ -31,6 +31,7 @@ import java.security.cert.X509Certificate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import javax.annotation.Nullable;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLParameters;
@@ -52,12 +53,21 @@ final class XdsX509TrustManager extends X509ExtendedTrustManager implements X509
 
   private final X509ExtendedTrustManager delegate;
   private final CertificateValidationContext certContext;
+  private final Map<String, X509ExtendedTrustManager> delegates;
 
   XdsX509TrustManager(@Nullable CertificateValidationContext certContext,
                       X509ExtendedTrustManager delegate) {
     checkNotNull(delegate, "delegate");
     this.certContext = certContext;
     this.delegate = delegate;
+    this.delegates = null;
+  }
+
+  XdsX509TrustManager(Map<String, X509ExtendedTrustManager> delegates) {
+    checkNotNull(delegates, "delegates");
+    this.delegates = delegates;
+    this.certContext = null;
+    this.delegate = null;
   }
 
   private static boolean verifyDnsNameInPattern(
@@ -201,6 +211,15 @@ final class XdsX509TrustManager extends X509ExtendedTrustManager implements X509
     verifySubjectAltNameInLeaf(peerCertChain[0], verifyList);
   }
 
+  private static String extractSpiffeFromChain(X509Certificate[] peerCertChain){
+    if (System.currentTimeMillis() % 2 == 0) {
+      System.err.println("spiffe1");
+      return "spiffe1";
+    }
+    System.err.println("spiffe2");
+    return "spiffe2";
+  }
+
   @Override
   public void checkClientTrusted(X509Certificate[] chain, String authType, Socket socket)
       throws CertificateException {
@@ -245,7 +264,11 @@ final class XdsX509TrustManager extends X509ExtendedTrustManager implements X509
       sslParams.setEndpointIdentificationAlgorithm("");
       sslEngine.setSSLParameters(sslParams);
     }
-    delegate.checkServerTrusted(chain, authType, sslEngine);
+    if (delegates != null) {
+      delegates.get(extractSpiffeFromChain(chain)).checkServerTrusted(chain, authType, sslEngine);
+    } else {
+      delegate.checkServerTrusted(chain, authType, sslEngine);
+    }
     verifySubjectAltNameInChain(chain);
   }
 
@@ -253,6 +276,7 @@ final class XdsX509TrustManager extends X509ExtendedTrustManager implements X509
   public void checkServerTrusted(X509Certificate[] chain, String authType)
       throws CertificateException {
     delegate.checkServerTrusted(chain, authType);
+
     verifySubjectAltNameInChain(chain);
   }
 

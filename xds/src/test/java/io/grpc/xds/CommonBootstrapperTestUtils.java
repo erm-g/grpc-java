@@ -116,6 +116,7 @@ public class CommonBootstrapperTestUtils {
     config.put("certificate_file", cert1);
     config.put("private_key_file", privateKey1);
     config.put("ca_certificate_file", trustCa1);
+    config.put("spiffe_trust_bundle_map_file", "dummy_file");
     Bootstrapper.CertificateProviderInfo certificateProviderInfo =
         Bootstrapper.CertificateProviderInfo.create("file_watcher", config);
     HashMap<String, Bootstrapper.CertificateProviderInfo> certProviders =

@@ -24,6 +24,7 @@ import io.grpc.xds.internal.security.Closeable;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -109,6 +110,13 @@ public abstract class CertificateProvider implements Closeable {
       this.trustedRoots = trustedRoots;
       for (Watcher watcher : downstreamWatchers) {
         sendLastTrustedRootsUpdate(watcher);
+      }
+      Map<String, List<X509Certificate>> spiffeRoots = new HashMap<>();
+      spiffeRoots.put("spiffe1", trustedRoots);
+      spiffeRoots.put("spiffe2", trustedRoots);
+      this.spiffeRoots = spiffeRoots;
+      for (Watcher watcher : downstreamWatchers) {
+        sendLastSpiffeRootsUpdate(watcher);
       }
     }
 

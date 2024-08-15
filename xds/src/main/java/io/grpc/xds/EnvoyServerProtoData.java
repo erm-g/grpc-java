@@ -71,6 +71,8 @@ public final class EnvoyServerProtoData {
 
   public static final class UpstreamTlsContext extends BaseTlsContext {
 
+    public String spiffe;
+
     @VisibleForTesting
     public UpstreamTlsContext(CommonTlsContext commonTlsContext) {
       super(commonTlsContext);
