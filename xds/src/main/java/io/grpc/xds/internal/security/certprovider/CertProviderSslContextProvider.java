@@ -169,6 +169,10 @@ abstract class CertProviderSslContextProvider extends DynamicSslContextProvider 
         updateSslContext();
         clearKeysAndCerts();
       }
+      if (savedSpiffeRoots != null) {
+        updateSslContext();
+        clearKeysAndCerts();
+      }
     } else if (isServerSideTls()) {
       if (savedKey != null) {
         updateSslContext();

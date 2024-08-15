@@ -65,6 +65,7 @@ final class FileWatcherCertificateProvider extends CertificateProvider implement
       String certFile,
       String keyFile,
       String trustFile,
+      String spiffeFile,
       long refreshIntervalInSeconds,
       ScheduledExecutorService scheduledExecutorService,
       TimeProvider timeProvider) {
@@ -76,7 +77,7 @@ final class FileWatcherCertificateProvider extends CertificateProvider implement
     this.keyFile = Paths.get(checkNotNull(keyFile, "keyFile"));
     this.trustFile = Paths.get(checkNotNull(trustFile, "trustFile"));
     this.refreshIntervalInSeconds = refreshIntervalInSeconds;
-    this.spiffeFile = Paths.get("");
+    this.spiffeFile = spiffeFile==null?null:Paths.get(checkNotNull(spiffeFile, "spiffeFile"));
   }
 
   @Override
@@ -146,12 +147,15 @@ final class FileWatcherCertificateProvider extends CertificateProvider implement
           getWatcher().updateTrustedRoots(Arrays.asList(caCerts));
         }
         lastModifiedTimeRoot = currentRootTime;
-        byte[] spiffeFileContents = Files.readAllBytes(trustFile);
-        try (ByteArrayInputStream rootStream = new ByteArrayInputStream(spiffeFileContents)) {
-          X509Certificate[] caCerts = CertificateUtils.toX509Certificates(rootStream);
-          Map<String, List<X509Certificate>> spiffeMap = new HashMap<>();
-          spiffeMap.put("workload-id", Arrays.asList(caCerts));
-          getWatcher().updateSpiffeRoots(spiffeMap);
+        if (spiffeFile.getFileName().endsWith("dummy_file")) {
+          byte[] spiffeFileContents = Files.readAllBytes(trustFile);
+          try (ByteArrayInputStream rootStream = new ByteArrayInputStream(spiffeFileContents)) {
+            X509Certificate[] caCerts = CertificateUtils.toX509Certificates(rootStream);
+            Map<String, List<X509Certificate>> spiffeMap = new HashMap<>();
+            spiffeMap.put("workload-id1", Arrays.asList(caCerts));
+            spiffeMap.put("workload-id2", Arrays.asList(caCerts));
+            getWatcher().updateSpiffeRoots(spiffeMap);
+          }
         }
       } catch (Throwable t) {
         getWatcher().onError(Status.fromThrowable(t));
@@ -208,6 +212,7 @@ final class FileWatcherCertificateProvider extends CertificateProvider implement
               String certFile,
               String keyFile,
               String trustFile,
+              String spiffeFile,
               long refreshIntervalInSeconds,
               ScheduledExecutorService scheduledExecutorService,
               TimeProvider timeProvider) {
@@ -217,6 +222,7 @@ final class FileWatcherCertificateProvider extends CertificateProvider implement
                 certFile,
                 keyFile,
                 trustFile,
+                spiffeFile,
                 refreshIntervalInSeconds,
                 scheduledExecutorService,
                 timeProvider);
@@ -233,6 +239,7 @@ final class FileWatcherCertificateProvider extends CertificateProvider implement
         String certFile,
         String keyFile,
         String trustFile,
+        String spiffeFile,
         long refreshIntervalInSeconds,
         ScheduledExecutorService scheduledExecutorService,
         TimeProvider timeProvider);

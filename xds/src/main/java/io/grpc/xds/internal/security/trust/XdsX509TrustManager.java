@@ -213,11 +213,9 @@ final class XdsX509TrustManager extends X509ExtendedTrustManager implements X509
 
   private static String extractSpiffeFromChain(X509Certificate[] peerCertChain){
     if (System.currentTimeMillis() % 2 == 0) {
-      System.err.println("spiffe1");
-      return "spiffe1";
+      return "workload-id1";
     }
-    System.err.println("spiffe2");
-    return "spiffe2";
+    return "workload-id2";
   }
 
   @Override

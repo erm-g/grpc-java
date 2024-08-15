@@ -70,7 +70,9 @@ public abstract class CertificateProvider implements Closeable {
       if (trustedRoots != null) {
         sendLastTrustedRootsUpdate(watcher);
       }
-      sendLastSpiffeRootsUpdate(watcher);
+      if (spiffeRoots != null) {
+        sendLastSpiffeRootsUpdate(watcher);
+      }
     }
 
     synchronized void removeWatcher(Watcher watcher) {
@@ -111,20 +113,13 @@ public abstract class CertificateProvider implements Closeable {
       for (Watcher watcher : downstreamWatchers) {
         sendLastTrustedRootsUpdate(watcher);
       }
-      Map<String, List<X509Certificate>> spiffeRoots = new HashMap<>();
-      spiffeRoots.put("spiffe1", trustedRoots);
-      spiffeRoots.put("spiffe2", trustedRoots);
-      this.spiffeRoots = spiffeRoots;
-      for (Watcher watcher : downstreamWatchers) {
-        sendLastSpiffeRootsUpdate(watcher);
-      }
     }
 
     @Override
     public void updateSpiffeRoots(Map<String, List<X509Certificate>> spiffeRoots) {
       this.spiffeRoots = spiffeRoots;
       for (Watcher watcher : downstreamWatchers) {
-        sendLastTrustedRootsUpdate(watcher);
+        sendLastSpiffeRootsUpdate(watcher);
       }
     }
 
